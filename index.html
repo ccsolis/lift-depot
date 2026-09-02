@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIFT DEPOT · Control de Inventario</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0e12;
+      --bg2: #13171e;
+      --panel: #171c25;
+      --panel2: #1d2430;
+      --line: #2a3342;
+      --text: #e8edf4;
+      --muted: #8b97a8;
+      --accent: #f5a524;
+      --accent2: #ffc14a;
+      --ok: #3dd68c;
+      --warn: #f5a524;
+      --bad: #ff5d5d;
+      --info: #5aa8ff;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Barlow', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, #12161d 0%, #0d1015 100%);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      padding: 22px 16px;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 8px 22px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+    .logo {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, #f5a524, #c77800);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      color: #1a1204;
+    }
+    .brand h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; letter-spacing: 1px; line-height: 1; }
+    .brand small { color: var(--muted); font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 12px; border: 0; background: transparent;
+      color: var(--muted); font: 600 14px/1 'Barlow', sans-serif;
+      border-radius: 10px; cursor: pointer; text-align: left; width: 100%;
+      margin-bottom: 4px;
+    }
+    .nav-btn:hover { background: var(--panel2); color: var(--text); }
+    .nav-btn.active { background: rgba(245,165,36,.12); color: var(--accent2); }
+    .nav-btn .ic { width: 20px; text-align: center; }
+    .sidebar-foot { margin-top: auto; padding: 12px; color: var(--muted); font-size: 12px; }
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    header.appbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 28px; border-bottom: 1px solid var(--line);
+      background: rgba(12,14,18,.8); backdrop-filter: blur(8px);
+      position: sticky; top: 0; z-index: 20;
+    }
+    header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; }
+    header h2 span { color: var(--muted); font-weight: 600; font-size: 15px; margin-left: 8px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    button.btn, .btn {
+      border: 0; border-radius: 10px; padding: 10px 14px;
+      font: 700 13px/1 'Barlow', sans-serif; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    .btn-primary { background: var(--accent); color: #1a1204; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-ghost { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+    .btn-danger { background: #3a1518; color: #ff8b8b; border: 1px solid #5a2226; }
+    .content { padding: 22px 28px 40px; overflow: auto; }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+    .kpi .lbl { color: var(--muted); font-size: 12px; letter-spacing: .6px; text-transform: uppercase; font-weight: 600; }
+    .kpi .val { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; margin-top: 6px; }
+    .kpi .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .kpi.warn .val { color: var(--warn); }
+    .kpi.ok .val { color: var(--ok); }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .toolbar { display: flex; gap: 10px; padding: 14px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+    input, select, textarea {
+      background: var(--bg2); border: 1px solid var(--line); color: var(--text);
+      border-radius: 10px; padding: 10px 12px; font: 500 14px 'Barlow', sans-serif;
+    }
+    input:focus, select:focus { outline: 1px solid var(--accent); }
+    .search { flex: 1; min-width: 200px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 11px 14px; text-align: left; font-size: 13.5px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-size: 11px; letter-spacing: .8px; text-transform: uppercase; background: #141922; }
+    .sku { font-family: ui-monospace, monospace; color: var(--accent2); font-size: 12px; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .b-ok { background: #123526; color: var(--ok); }
+    .b-low { background: #3a2a10; color: var(--warn); }
+    .b-out { background: #3a1518; color: var(--bad); }
+    .qty { font-weight: 700; }
+    .row-actions { display: flex; gap: 6px; }
+    .icon-btn { background: var(--panel2); border: 1px solid var(--line); color: var(--text); border-radius: 8px; padding: 6px 8px; cursor: pointer; font-size: 12px; font-weight: 700; }
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+    .modal-bg.show { display: flex; }
+    .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; width: min(720px, 100%); max-height: 90vh; overflow: auto; }
+    .modal h3 { padding: 18px 20px 0; font-family: 'Barlow Condensed', sans-serif; font-size: 24px; }
+    .form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 18px 20px 8px; }
+    .form .full { grid-column: 1 / -1; }
+    .form label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
+    .form input, .form select { width: 100%; }
+    .modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 20px 20px; }
+    .alert-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    .move-in { color: var(--ok); }
+    .move-out { color: var(--bad); }
+    .empty { padding: 40px; text-align: center; color: var(--muted); }
+    @media (max-width: 980px) {
+      .sidebar { display: none; }
+      .kpis { grid-template-columns: 1fr 1fr; }
+      .form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">LD</div>
+      <div>
+        <h1>LIFT DEPOT</h1>
+        <small>Inventario</small>
+      </div>
+    </div>
+    <button class="nav-btn active" data-view="dashboard"><span class="ic">▣</span> Tablero</button>
+    <button class="nav-btn" data-view="inventory"><span class="ic">▤</span> Inventario</button>
+    <button class="nav-btn" data-view="moves"><span class="ic">⇄</span> Movimientos</button>
+    <button class="nav-btn" data-view="alerts"><span class="ic">⚠</span> Alertas de stock</button>
+    <div class="sidebar-foot">Componentes de elevadores<br />Acceso web mundial</div>
+  </aside>
+  <section class="main">
+    <header class="appbar">
+      <h2 id="pageTitle">Tablero <span>resumen del almacén</span></h2>
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="exportCSV()">Exportar CSV</button>
+        <button class="btn btn-ghost" onclick="seedIfEmpty(true)">Cargar demo</button>
+        <button class="btn btn-primary" onclick="openProduct()">+ Producto</button>
+      </div>
+    </header>
+    <div class="content" id="app"></div>
+  </section>
+  <div class="modal-bg" id="modal"><div class="modal" id="modalBody"></div></div>
+<script>
+const KEY = 'liftdepot_v1';
+const CATS = ['Motores y máquinas','Cables y contrapesos','Puertas y operadores','Botoneras y pulsadores','Controladores y PCB','Sensores y finales','Frenos','Guías y zapatas','Poleas y rodillos','Cabina e iluminación','Seguridad','Consumibles'];
+const BRANDS = ['Otis','Kone','Schindler','Mitsubishi','ThyssenKrupp','Fujitec','Genérico','Lift Depot'];
+const DEMO = [
+  {sku:'MOT-OT-13', name:'Máquina gearless 13 kW', cat:'Motores y máquinas', brand:'Otis', qty:3, min:2, loc:'A-01', cost:28500, price:41200, unit:'pza', supplier:'Otis México'},
+  {sku:'CAB-8MM-200', name:'Cable de acero 8 mm × 200 m', cat:'Cables y contrapesos', brand:'Genérico', qty:6, min:3, loc:'B-12', cost:4200, price:6100, unit:'rollo', supplier:'Aceros del Sureste'},
+  {sku:'PUE-OP-K1', name:'Operador de puerta KONE DX', cat:'Puertas y operadores', brand:'Kone', qty:2, min:2, loc:'C-04', cost:9800, price:14500, unit:'pza', supplier:'Kone Parts'},
+  {sku:'BTN-COP-48', name:'Botonera COP 48 mm LED naranja', cat:'Botoneras y pulsadores', brand:'Lift Depot', qty:24, min:10, loc:'D-02', cost:185, price:320, unit:'pza', supplier:'Lift Depot'},
+  {sku:'PCB-SCH-MC', name:'Tarjeta controladora Schindler Miconic', cat:'Controladores y PCB', brand:'Schindler', qty:1, min:2, loc:'E-01', cost:12400, price:18900, unit:'pza', supplier:'EuroLift'},
+  {sku:'SEN-FIN-IND', name:'Final de carrera inductivo M18', cat:'Sensores y finales', brand:'Genérico', qty:18, min:8, loc:'D-08', cost:210, price:390, unit:'pza', supplier:'Automatiza YUC'},
+  {sku:'FRN-TK-200', name:'Zapata de freno TK 200 mm', cat:'Frenos', brand:'ThyssenKrupp', qty:4, min:4, loc:'A-07', cost:760, price:1250, unit:'par', supplier:'TK Parts'},
+  {sku:'GUI-T89-5', name:'Guía T89 × 5 m', cat:'Guías y zapatas', brand:'Genérico', qty:12, min:6, loc:'F-01', cost:980, price:1480, unit:'barra', supplier:'Aceros del Sureste'},
+  {sku:'POL-DES-320', name:'Polea de desvío 320 mm', cat:'Poleas y rodillos', brand:'Mitsubishi', qty:5, min:2, loc:'A-11', cost:2100, price:3350, unit:'pza', supplier:'Mitsu Parts'},
+  {sku:'CAB-LED-24', name:'Tira LED cabina 24V 2 m', cat:'Cabina e iluminación', brand:'Lift Depot', qty:40, min:15, loc:'D-14', cost:95, price:180, unit:'pza', supplier:'Lift Depot'},
+  {sku:'SEG-LLAVE', name:'Cerradura de emergencia de pozo', cat:'Seguridad', brand:'Genérico', qty:9, min:5, loc:'E-06', cost:430, price:790, unit:'pza', supplier:'SeguriLift'},
+  {sku:'ACE-ISO-5', name:'Aceite ISO VG 220 5 L', cat:'Consumibles', brand:'Genérico', qty:7, min:4, loc:'G-02', cost:320, price:510, unit:'bidón', supplier:'LubriSur'}
+];
+function load(){const raw=localStorage.getItem(KEY);if(!raw)return{products:[],moves:[]};try{return JSON.parse(raw);}catch{return{products:[],moves:[]};}}
+function save(db){localStorage.setItem(KEY,JSON.stringify(db));}
+let db=load();let view='dashboard';let filter={q:'',cat:'',brand:''};
+function money(n){return new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}).format(n||0);}
+function uid(){return 'P'+Math.random().toString(36).slice(2,8).toUpperCase();}
+function now(){return new Date().toISOString();}
+function fmt(d){return new Date(d).toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});}
+function status(p){if(p.qty<=0)return{cls:'b-out',t:'Agotado'};if(p.qty<=p.min)return{cls:'b-low',t:'Bajo'};return{cls:'b-ok',t:'OK'};}
+function seedIfEmpty(force=false){if(!force&&db.products.length)return;db.products=DEMO.map(p=>({...p,id:uid()}));db.moves=[{id:uid(),sku:'BTN-COP-48',name:'Botonera COP 48 mm LED naranja',type:'IN',qty:24,note:'Compra inicial',at:now()},{id:uid(),sku:'PCB-SCH-MC',name:'Tarjeta controladora Schindler Miconic',type:'OUT',qty:1,note:'Servicio Hotel Paseo 60',at:now()}];save(db);render();}
+function kpis(){const n=db.products.length;const units=db.products.reduce((a,p)=>a+Number(p.qty),0);const value=db.products.reduce((a,p)=>a+Number(p.qty)*Number(p.cost||0),0);const low=db.products.filter(p=>p.qty<=p.min).length;return{n,units,value,low};}
+function filtered(){const q=filter.q.toLowerCase();return db.products.filter(p=>{const hit=!q||[p.sku,p.name,p.brand,p.loc,p.supplier].join(' ').toLowerCase().includes(q);return hit&&(!filter.cat||p.cat===filter.cat)&&(!filter.brand||p.brand===filter.brand);});}
+function setView(v){view=v;document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));const titles={dashboard:['Tablero','resumen del almacén'],inventory:['Inventario','catálogo de componentes'],moves:['Movimientos','entradas y salidas'],alerts:['Alertas','stock mínimo y agotados']};document.getElementById('pageTitle').innerHTML=titles[v][0]+' <span>'+titles[v][1]+'</span>';render();}
+document.querySelectorAll('.nav-btn').forEach(b=>b.onclick=()=>setView(b.dataset.view));
+function render(){const el=document.getElementById('app');if(view==='dashboard')el.innerHTML=dashHTML();if(view==='inventory')el.innerHTML=invHTML();if(view==='moves')el.innerHTML=movesHTML();if(view==='alerts')el.innerHTML=alertsHTML();bindInv();}
+function dashHTML(){const k=kpis();const lows=db.products.filter(p=>p.qty<=p.min).slice(0,6);const last=[...db.moves].reverse().slice(0,8);return `<div class="kpis"><div class="kpi"><div class="lbl">Productos</div><div class="val">${k.n}</div><div class="sub">SKUs activos</div></div><div class="kpi ok"><div class="lbl">Unidades</div><div class="val">${k.units}</div><div class="sub">en almacén</div></div><div class="kpi"><div class="lbl">Valor de costo</div><div class="val" style="font-size:26px">${money(k.value)}</div><div class="sub">inventario valorizado</div></div><div class="kpi ${k.low?'warn':''}"><div class="lbl">Alertas</div><div class="val">${k.low}</div><div class="sub">bajo mínimo o agotado</div></div></div><div style="display:grid;grid-template-columns:1.2fr .8fr;gap:14px"><div class="card"><div style="padding:14px 16px;font-weight:700">Últimos movimientos</div>${last.length?`<table><thead><tr><th>Fecha</th><th>SKU</th><th>Tipo</th><th>Cant.</th><th>Nota</th></tr></thead><tbody>${last.map(m=>`<tr><td>${fmt(m.at)}</td><td class="sku">${m.sku}</td><td class="${m.type==='IN'?'move-in':'move-out'}">${m.type==='IN'?'Entrada':'Salida'}</td><td>${m.qty}</td><td>${m.note||''}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">Aún no hay movimientos</div>`}</div><div class="card"><div style="padding:14px 16px;font-weight:700">Requieren reposición</div>${lows.length?lows.map(p=>`<div class="alert-item"><div><div>${p.name}</div><div class="sku">${p.sku} · ${p.loc||'s/ubicación'}</div></div><div class="qty">${p.qty}/${p.min}</div></div>`).join(''):`<div class="empty">Todo en nivel óptimo</div>`}</div></div>`;}
+function invHTML(){const rows=filtered();return `<div class="card"><div class="toolbar"><input class="search" id="q" placeholder="Buscar SKU, nombre, marca, ubicación…" value="${filter.q}" /><select id="cat"><option value="">Todas las categorías</option>${CATS.map(c=>`<option ${filter.cat===c?'selected':''}>${c}</option>`).join('')}</select><select id="brand"><option value="">Todas las marcas</option>${BRANDS.map(c=>`<option ${filter.brand===c?'selected':''}>${c}</option>`).join('')}</select></div>${rows.length?`<table><thead><tr><th>SKU</th><th>Producto</th><th>Cat.</th><th>Marca</th><th>Stock</th><th>Mín.</th><th>Ubic.</th><th>Costo</th><th>Estado</th><th></th></tr></thead><tbody>${rows.map(p=>{const s=status(p);return `<tr><td class="sku">${p.sku}</td><td><strong>${p.name}</strong><div style="color:var(--muted);font-size:12px">${p.unit||'pza'} · ${p.supplier||''}</div></td><td>${p.cat}</td><td>${p.brand}</td><td class="qty">${p.qty}</td><td>${p.min}</td><td>${p.loc||'—'}</td><td>${money(p.cost)}</td><td><span class="badge ${s.cls}">${s.t}</span></td><td class="row-actions"><button class="icon-btn" onclick="openMove('${p.id}','IN')">+ Ent</button><button class="icon-btn" onclick="openMove('${p.id}','OUT')">− Sal</button><button class="icon-btn" onclick="openProduct('${p.id}')">Editar</button></td></tr>`;}).join('')}</tbody></table>`:`<div class="empty">No hay productos. Usa “+ Producto” o “Cargar demo”.</div>`}</div>`;}
+function bindInv(){const q=document.getElementById('q');const cat=document.getElementById('cat');const brand=document.getElementById('brand');if(q)q.oninput=e=>{filter.q=e.target.value;render();q.focus();q.setSelectionRange(q.value.length,q.value.length);};if(cat)cat.onchange=e=>{filter.cat=e.target.value;render();};if(brand)brand.onchange=e=>{filter.brand=e.target.value;render();};}
+function movesHTML(){const list=[...db.moves].reverse();return `<div class="card">${list.length?`<table><thead><tr><th>Fecha</th><th>SKU</th><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Nota</th></tr></thead><tbody>${list.map(m=>`<tr><td>${fmt(m.at)}</td><td class="sku">${m.sku}</td><td>${m.name}</td><td class="${m.type==='IN'?'move-in':'move-out'}">${m.type==='IN'?'Entrada':'Salida'}</td><td class="qty">${m.qty}</td><td>${m.note||''}</td></tr>`).join('')}</tbody></table>`:`<div class="empty">Sin movimientos registrados</div>`}</div>`;}
+function alertsHTML(){const lows=db.products.filter(p=>p.qty<=p.min);return `<div class="card">${lows.length?lows.map(p=>`<div class="alert-item"><div><div><strong>${p.name}</strong> · <span class="sku">${p.sku}</span></div><div style="color:var(--muted);font-size:13px">${p.cat} · ${p.loc||'sin ubicación'} · proveedor ${p.supplier||'—'}</div></div><div style="text-align:right"><div class="qty">${p.qty} / mín ${p.min}</div><button class="icon-btn" style="margin-top:6px" onclick="openMove('${p.id}','IN')">Registrar entrada</button></div></div>`).join(''):`<div class="empty">No hay alertas.</div>`}</div>`;}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal();});
+function openProduct(id){const p=db.products.find(x=>x.id===id)||{id:'',sku:'',name:'',cat:CATS[0],brand:BRANDS[0],qty:0,min:1,loc:'',cost:0,price:0,unit:'pza',supplier:''};document.getElementById('modalBody').innerHTML=`<h3>${id?'Editar producto':'Nuevo producto'}</h3><div class="form"><div><label>SKU</label><input id="f_sku" value="${p.sku}" /></div><div><label>Unidad</label><input id="f_unit" value="${p.unit||'pza'}" /></div><div class="full"><label>Nombre</label><input id="f_name" value="${p.name}" /></div><div><label>Categoría</label><select id="f_cat">${CATS.map(c=>`<option ${p.cat===c?'selected':''}>${c}</option>`).join('')}</select></div><div><label>Marca</label><select id="f_brand">${BRANDS.map(c=>`<option ${p.brand===c?'selected':''}>${c}</option>`).join('')}</select></div><div><label>Stock actual</label><input id="f_qty" type="number" min="0" value="${p.qty}" /></div><div><label>Stock mínimo</label><input id="f_min" type="number" min="0" value="${p.min}" /></div><div><label>Ubicación</label><input id="f_loc" value="${p.loc||''}" /></div><div><label>Proveedor</label><input id="f_sup" value="${p.supplier||''}" /></div><div><label>Costo (MXN)</label><input id="f_cost" type="number" min="0" step="0.01" value="${p.cost||0}" /></div><div><label>Precio venta (MXN)</label><input id="f_price" type="number" min="0" step="0.01" value="${p.price||0}" /></div></div><div class="modal-foot">${id?`<button class="btn btn-danger" onclick="delProduct('${id}')">Eliminar</button>`:''}<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveProduct('${id||''}')">Guardar</button></div>`;document.getElementById('modal').classList.add('show');}
+function saveProduct(id){const row={sku:document.getElementById('f_sku').value.trim().toUpperCase(),name:document.getElementById('f_name').value.trim(),cat:document.getElementById('f_cat').value,brand:document.getElementById('f_brand').value,qty:Number(document.getElementById('f_qty').value||0),min:Number(document.getElementById('f_min').value||0),loc:document.getElementById('f_loc').value.trim(),supplier:document.getElementById('f_sup').value.trim(),cost:Number(document.getElementById('f_cost').value||0),price:Number(document.getElementById('f_price').value||0),unit:document.getElementById('f_unit').value.trim()||'pza'};if(!row.sku||!row.name){alert('SKU y nombre son obligatorios');return;}if(id){const i=db.products.findIndex(x=>x.id===id);db.products[i]={...db.products[i],...row};}else{if(db.products.some(x=>x.sku===row.sku)){alert('Ese SKU ya existe');return;}db.products.push({...row,id:uid()});}save(db);closeModal();render();}
+function delProduct(id){if(!confirm('¿Eliminar este producto?'))return;db.products=db.products.filter(x=>x.id!==id);save(db);closeModal();render();}
+function openMove(id,type){const p=db.products.find(x=>x.id===id);if(!p)return;document.getElementById('modalBody').innerHTML=`<h3>${type==='IN'?'Entrada de stock':'Salida de stock'}</h3><div class="form"><div class="full"><strong>${p.name}</strong><div class="sku">${p.sku} · stock actual ${p.qty}</div></div><div><label>Cantidad</label><input id="m_qty" type="number" min="1" value="1" /></div><div class="full"><label>Nota / referencia</label><input id="m_note" placeholder="OC, cliente, elevador, técnico…" /></div></div><div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="applyMove('${id}','${type}')">Registrar</button></div>`;document.getElementById('modal').classList.add('show');}
+function applyMove(id,type){const p=db.products.find(x=>x.id===id);const qty=Number(document.getElementById('m_qty').value||0);const note=document.getElementById('m_note').value.trim();if(qty<=0){alert('Cantidad inválida');return;}if(type==='OUT'&&qty>p.qty){alert('No hay suficiente stock');return;}p.qty+=(type==='IN'?qty:-qty);db.moves.push({id:uid(),sku:p.sku,name:p.name,type,qty,note,at:now()});save(db);closeModal();render();}
+function exportCSV(){const headers=['SKU','Nombre','Categoria','Marca','Cantidad','Minimo','Ubicacion','Costo','Precio','Unidad','Proveedor'];const lines=[headers.join(',')].concat(db.products.map(p=>[p.sku,`"${p.name}"`,p.cat,p.brand,p.qty,p.min,p.loc,p.cost,p.price,p.unit,`"${p.supplier||''}"`].join(',')));const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='inventario-lift-depot.csv';a.click();}
+seedIfEmpty(false);render();
+</script>
+</body>
+</html>
